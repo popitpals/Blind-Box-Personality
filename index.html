@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blind Box Personality</title>
+
+  <!-- DM Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- html2canvas for saving result as PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+  <style>
+    :root{
+      --butter: #FEF7C5;
+      --mint: #D5FFC9;
+      --text: #444444;
+      --card-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      --radius: 20px;
+      --btn-radius: 999px;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      color:var(--text);
+      background: linear-gradient(180deg, var(--butter) 0%, var(--mint) 100%);
+    }
+
+    .wrap {
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:48px 20px;
+      box-sizing:border-box;
+    }
+
+    .container {
+      width:100%;
+      max-width:920px;
+      background: rgba(255,255,255,0.55);
+      border-radius:28px;
+      padding:32px;
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .center { text-align:center; }
+
+    h1 { margin:0 0 8px; font-size:32px; }
+    p.subtitle { margin:0 0 20px; color:#5e5e5e; }
+
+    .page { display:none; }
+    .page.active { display:block; }
+
+button {
+  display: block;
+  background-color: #fff;
+  border: 0px solid #f4e7c5;
+  color: #555;
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin: 10px 0;
+  width: 100%;
+  text-align: center;
+  transition: 0.3s;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+}
+
+button:hover {
+  background-color: #fffbe6;
+  border-color: #e7cf9f;
+}
+
+.question-container {
+  padding: 14px;
+}
+
+    input[type="text"]{
+      padding:12px 16px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,0.06);
+      width:320px;
+      font-size:16px;
+      background:white;
+    }
+
+    .result-card {
+      max-width:720px;
+      margin:0 auto;
+      border-radius:20px;
+      padding:22px;
+      box-shadow: var(--card-shadow);
+      display:flex;
+      gap:18px;
+      align-items:center;
+    }
+
+    .result-right img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:14px;
+    }
+
+    @media (max-width:680px){
+      .result-card { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="container">
+
+      <!-- Page 1 -->
+      <div id="page-start" class="page active center">
+        <h1>Blind Box Personality</h1>
+        <p class="subtitle">Open your box and see who you’re today ^_^</p>
+        <div style="margin-top:18px;">
+          <button class="btn" id="btn-start">Start the Quiz</button>
+        </div>
+      </div>
+
+      <!-- Page 2 -->
+      <div id="page-name" class="page center">
+        <h2>Hello, who’s there?</h2>
+        <p class="subtitle">Type your name before opening the box</p>
+        <div class="name-input">
+          <input type="text" id="user-name" placeholder="Your name" maxlength="40" />
+          <button class="btn" id="btn-open">Open the Box</button>
+        </div>
+      </div>
+
+      <!-- Page 3 -->
+      <div id="page-quiz" class="page center">
+        <div id="question-card">
+          <div id="question-number"></div>
+          <div id="question-text"></div>
+          <div id="options"></div>
+          <div class="progress"><i id="progress-bar"></i></div>
+        </div>
+      </div>
+
+      <!-- Page 4 -->
+      <div id="page-result" class="page center">
+        <div class="result-card" id="result-card">
+          <div class="result-left">
+            <div id="header-name"></div>
+            <div id="result-name" class="result-title"></div>
+            <div id="result-series"></div>
+            <p id="result-desc"></p>
+            <p id="result-tagline" class="tagline"></p>
+            <div style="margin-top:12px;">
+              <button class="btn" id="save-btn">Save</button>
+              <button class="btn" id="restart-btn">Restart</button>
+            </div>
+          </div>
+          <div class="result-right" id="result-image"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  const questions = [
+    { text:"You’re about to open a Blind Box! What’s your first thought?", a:"I hope it’s something rare.", b:"Whatever it is, it’s gonna be cute." },
+    { text:"Lazy Sunday afternoon...", a:"Chill alone with snacks", b:"Hang out or call a friend" },
+    { text:"Someone gives you a gift unexpectedly. You will?", a:"Blush quietly", b:"Laugh and thank them loudly" },
+    { text:"What kind of Blind Box design do you like best?", a:"Minimalist", b:"Dreamy and colorful" },
+    { text:"You get a duplicate Blind Box figure.", a:"Repaint or trade", b:"Keep it! It’s your twin" },
+    { text:"People describe you as:", a:"Calm and thoughtful", b:"Bright and spontaneous" },
+    { text:"You find a limited edition box, only one left!", a:"Grab it fast", b:"Let someone else have it" },
+    { text:"Choose your café drink:", a:"Matcha latte", b:"Strawberry soda" },
+    { text:"Your room looks like:", a:"Neat with little trinkets", b:"Cozy chaos full of plushies" },
+    { text:"When things don’t go as planned:", a:"Try again calmly", b:"Laugh about it later" }
+  ];
+
+  const characters = [
+    {name:"Lumi the Dreamer",series:"Soft Glow Series",desc:"Quiet magic in human form.",tagline:"The world feels softer when I look at it slowly.",color:"#F5D1EF",image:"images/Lumi.png"},
+    {name:"Roux the Spark",series:"Energy Pop Series",desc:"The one who laughs first.",tagline:"If it’s fun, I’m in.",color:"#FFB4DA",image:"images/Roux.png"},
+    {name:"Auri the Curator",series:"Minimal Muse Series",desc:"Finds beauty in order.",tagline:"Clean lines, calm mind.",color:"#FFF8E9",image:"images/Auri.png"},
+    {name:"Nino the Adventurer",series:"Wander Capsule Series",desc:"Always chasing stories.",tagline:"Every turn is a new story.",color:"#BCD3F9",image:"images/Nino.png"},
+    {name:"Sola the Optimist",series:"Skyline Series",desc:"Pure sunshine energy.",tagline:"The sky’s always clear somewhere.",color:"#FEF7C5",image:"images/Sola.png"},
+    {name:"Kiro the Protector",series:"Guardian Charm Series",desc:"Reliable and steady.",tagline:"You can rest, I’ve got this.",color:"#D5FFC9",image:"images/Kiro.png"},
+    {name:"Mimi the Storyteller",series:"Bubble Tale Series",desc:"Turns daily life into fairytales.",tagline:"There’s always a story hiding in today.",color:"#FFF4FD",image:"images/Mimi.png"},
+    {name:"Vea the Thinker",series:"PuzzleMind Series",desc:"Solves life like a puzzle.",tagline:"Everything connects eventually.",color:"#BCD3F9",image:"images/Vea.png"},
+    {name:"Fynn the Healer",series:"Calm Wave Series",desc:"Warm and empathetic.",tagline:"You can breathe here.",color:"#D5FFC9",image:"images/Fynn.png"},
+    {name:"Tomo the Rebel",series:"Oddbox Series",desc:"Artistic chaos energy.",tagline:"Normal’s never been my thing.",color:"#FFCBBF",image:"images/Tomo.png"},
+    {name:"Eri the Organizer",series:"Clarity Line Series",desc:"Loves lists and structure.",tagline:"Order brings me peace.",color:"#FFF8E9",image:"images/Eri.png"},
+    {name:"Noa the Carefree",series:"Sunfloat Series",desc:"A walking good mood.",tagline:"It’ll be fine—trust the drift.",color:"#FEF7C5",image:"images/Noa.png"},
+    {name:"Lani the Gentle Chaos",series:"Dream Drift Series",desc:"Messy but kindhearted.",tagline:"Perfection’s overrated anyway.",color:"#FFB4DA",image:"images/Lani.png"},
+    {name:"Ren the Artist",series:"InkSoul Series",desc:"Turns emotions into art.",tagline:"I feel, therefore I create.",color:"#F5D1EF",image:"images/Ren.png"},
+    {name:"Zio the Challenger",series:"Neon Strike Series",desc:"Bold and fearless.",tagline:"If I fall, I’ll fall loud.",color:"#FFCBBF",image:"images/Zio.png"},
+    {name:"Yua the Visionary",series:"Aurora Bloom Series",desc:"Organized dreamer.",tagline:"Dream, plan, repeat.",color:"#BCD3F9",image:"images/Yua.png"},
+];
+
+  let answers=[],currentQ=0;
+  const pages={start:document.getElementById('page-start'),name:document.getElementById('page-name'),quiz:document.getElementById('page-quiz'),result:document.getElementById('page-result')};
+  const userName=document.getElementById('user-name');
+  const qText=document.getElementById('question-text');
+  const options=document.getElementById('options');
+  const qNum=document.getElementById('question-number');
+  const resultImage=document.getElementById('result-image');
+  const resultName=document.getElementById('result-name');
+  const resultSeries=document.getElementById('result-series');
+  const resultDesc=document.getElementById('result-desc');
+  const resultTag=document.getElementById('result-tagline');
+  const headerName=document.getElementById('header-name');
+  const resultCard=document.getElementById('result-card');
+
+  document.getElementById('btn-start').onclick=()=>show('name');
+  document.getElementById('btn-open').onclick=()=>{show('quiz');renderQ();};
+  document.getElementById('restart-btn').onclick=()=>{answers=[];currentQ=0;userName.value="";show('start');};
+  document.getElementById('save-btn').onclick=()=>html2canvas(resultCard,{scale:2}).then(c=>{const a=document.createElement('a');a.href=c.toDataURL();a.download='blindbox_result.png';a.click();});
+
+  function show(p){Object.values(pages).forEach(pg=>pg.classList.remove('active'));pages[p].classList.add('active');}
+  function renderQ(){
+    const q=questions[currentQ];
+    qNum.textContent=`Question ${currentQ+1} of ${questions.length}`;
+    qText.textContent=q.text;
+    options.innerHTML='';
+    ['a','b'].forEach(x=>{
+      const b=document.createElement('button');
+      b.className='btn';b.textContent=q[x];
+      b.onclick=()=>{answers[currentQ]=x;currentQ++;currentQ>=questions.length?showResult():renderQ();};
+      options.appendChild(b);
+    });
+  }
+  function showResult() {
+  const bit = (arr) => {
+    let b = 0, a = 0;
+    arr.forEach(i => answers[i] === 'b' ? b++ : a++);
+    return b > a ? 1 : 0;
+  };
+  const idx = (bit([0,4,8])<<3) | (bit([1,5,9])<<2) | (bit([2,6])<<1) | (bit([3,7]));
+  const ch = characters[idx];
+  const uname = userName.value.trim() || 'Friend';
+  const resultContainer = document.getElementById('page-result');
+
+  resultContainer.innerHTML = `
+    <div style="
+      min-height: 50vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: ${ch.color};
+      font-family: 'DM Sans', sans-serif;
+      animation: fadeIn 0.6s ease forwards;
+      padding: 24px;
+      box-sizing: border-box;
+    ">
+      <div style="
+        background: ${ch.color};
+        border-radius: 20px;
+        padding: 22px 20px 28px;
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+        color: #000;
+      ">
+        <h2 style="
+          font-size: 16px;
+          opacity: 0.9;
+          margin-bottom: 10px;
+        ">${uname}’s Blind Box</h2>
+
+        <h1 style="
+          font-size: 26px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        ">${ch.name}</h1>
+
+        <h3 style="
+          font-size: 14px;
+          font-weight: 400;
+          margin-bottom: 16px;
+          opacity: 0.9;
+        ">${ch.series}</h3>
+
+        <img src="${ch.image}" alt="${ch.name}" style="
+          width: 225px;
+          height: 225px;
+          object-fit: cover;
+          border-radius: 14px;
+          margin-bottom: 14px;
+        ">
+
+        <p style="
+          font-size: 14px;
+          font-style: italic;
+          margin-bottom: 10px;
+          line-height: 1.4;
+          opacity: 0.95;
+        ">“${ch.tagline}”</p>
+
+        <p style="
+          font-size: 13px;
+          line-height: 1.6;
+          opacity: 0.95;
+        ">${ch.desc}</p>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+  resultContainer.classList.add('active');
+}
+</script>
+</body>
+</html>
